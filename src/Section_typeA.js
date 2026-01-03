@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import styles from "./css/section_typeA.module.css";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 function Section_typeA({ data = [] }) {
   // TO DO
@@ -41,12 +41,83 @@ function Section_typeA({ data = [] }) {
   // ---------------------------------------------------------
   // 2. 슬라이드 이동 효과 구현
   // ---------------------------------------------------------
-  const [curSlide, SetCurSlide] = useState(0);
-  const [transAmount, SetTransAmount] = useState(0);
+  const [curSlide, setCurSlide] = useState(0);
+  const [transAmount, setTransAmount] = useState(0);
 
   useEffect(() => {
-    SetTransAmount(curSlide * (-101.31));
+    setTransAmount(curSlide * (-101.31));
   }, [curSlide]);
+
+  // ---------------------------------------------------------
+  // 3. 드래그 효과 구현
+  // ---------------------------------------------------------
+  const [isDragging, setIsDragging] = useState(false); // 드래그 중인가?
+  const [startX, setStartX] = useState(0);             // 드래그 시작 X 좌표
+  const [dragOffset, setDragOffset] = useState(0);     // 드래그로 움직인 거리 (px)
+  const dragMovedRef = useRef(false);
+  const transformValue = `translateX(calc(${curSlide * -101.31}% + ${dragOffset}px))`;
+
+  const onDragStart = (e) => {
+    setIsDragging(true);
+    // 마우스 이벤트와 터치 이벤트를 구분해서 X좌표를 가져옴
+    const pageX = e.touches ? e.touches[0].pageX : e.pageX;
+    setStartX(pageX);
+
+    // ★ 드래그 시작할 땐 "아직 안 움직였음"으로 초기화
+    dragMovedRef.current = false;
+  };
+
+  const onDragMove = (e) => {
+    if (!isDragging) return; // 드래그 중이 아니면 무시
+
+    const pageX = e.touches ? e.touches[0].pageX : e.pageX;
+    const moveX = pageX - startX; // 움직인 거리 = 현재 위치 - 시작 위치
+    setDragOffset(moveX);
+
+    // 움직인 거리가 5px 이상이면 "이건 드래그다!"라고 표시
+    if (Math.abs(moveX) > 5) {
+      dragMovedRef.current = true;
+    }
+  };
+
+  const onDragEnd = () => {
+    if (!isDragging) return;
+    setIsDragging(false);
+
+    const DRAG_THRESHOLD = 100; // 100px 이상 움직여야 넘어감 (감도 조절)
+
+    // 왼쪽으로 많이 끌었으면 (Next)
+    if (dragOffset < -DRAG_THRESHOLD) {
+      // 마지막 페이지가 아닐 때만 이동
+      if (curSlide < slideCount - 1) {
+        setCurSlide((prev) => prev + 1);
+      }
+    }
+    // 오른쪽으로 많이 끌었으면 (Prev)
+    else if (dragOffset > DRAG_THRESHOLD) {
+      // 첫 페이지가 아닐 때만 이동
+      if (curSlide > 0) {
+        setCurSlide((prev) => prev - 1);
+      }
+    }
+
+    // 드래그 거리 초기화 (이때 transition이 먹히면서 부드럽게 제자리 or 다음자리로 감)
+    setDragOffset(0);
+  };
+
+  const onMouseLeave = () => {
+    if (isDragging) onDragEnd();
+  };
+
+  // ---------------------------------------------------------
+  // 링크 클릭 차단 핸들러
+  // ---------------------------------------------------------
+  const handleLinkClick = (e) => {
+    // 만약 드래그로 판독되었다면?
+    if (dragMovedRef.current) {
+      e.preventDefault(); // 링크 이동 막기!
+    }
+  };
 
   return (
     <div className={styles.top_container}>
@@ -57,20 +128,41 @@ function Section_typeA({ data = [] }) {
 
       {/* 2. Carousel Slider Area */}
       <div className={styles.carousel_slider}>
-        <div className={styles.flickity_viewport}>
+        <div
+          className={styles.flickity_viewport}
+          // 마우스/터치 이벤트 연결
+          onMouseDown={onDragStart}
+          onMouseMove={onDragMove}
+          onMouseUp={onDragEnd}
+          onMouseLeave={onMouseLeave}
+
+          onTouchStart={onDragStart}
+          onTouchMove={onDragMove}
+          onTouchEnd={onDragEnd}
+        >
           <div
             className={styles.flickity_slider}
-            style={{ transform: `translateX(${transAmount}%)` }}
+            style={{
+              transform: transformValue,
+              transition: isDragging ? "none" : "transform 0.5s ease-out",
+              cursor: isDragging ? "grabbing" : "grab"
+            }}
           >
 
             {groups.map((group, groupIdx) => (
+              // 이미지 드래그 방지 (중요: 이미지가 드래그되면 슬라이드가 안됨)
               <div
                 key={groupIdx}
                 className={styles.flickity_group}
+                onDragStart={e => e.preventDefault()}
               >
                 {group.map((item) => (
                   <div key={item.id} className={styles.ResearchAreaCard}>
-                    <Link className={styles.ResearchAreaCard_link} to={item.link}>
+                    <Link 
+                      className={styles.ResearchAreaCard_link} 
+                      to={item.link}
+                      onClick={handleLinkClick}
+                    >
                       <div className={styles.ResearchAreaCard_media}>
                         <picture>
                           <img data-image-size="mediumIcon" alt={`${item.title}.svg`} width="48" height="48" src={item.media_source} />
@@ -90,7 +182,7 @@ function Section_typeA({ data = [] }) {
         </div>
         <button
           className={`${styles.flickity_button} ${styles.flickity_prev_next_button} ${styles.previous}`}
-          onClick={() => SetCurSlide(curSlide - 1)}
+          onClick={() => setCurSlide(curSlide - 1)}
           style={curSlide === 0 ? { display: 'none' } : null}
         >
           <svg className={styles.flickity_button_icon} viewBox="0 0 100 100">
@@ -100,8 +192,8 @@ function Section_typeA({ data = [] }) {
         </button>
         <button
           className={`${styles.flickity_button} ${styles.flickity_prev_next_button} ${styles.next}`}
-          onClick={() => SetCurSlide(curSlide + 1)}
-          style={curSlide === slideCount-1 ? { display: 'none' } : null}
+          onClick={() => setCurSlide(curSlide + 1)}
+          style={curSlide === slideCount - 1 ? { display: 'none' } : null}
         >
           <svg className={styles.flickity_button_icon} viewBox="0 0 100 100">
             <title>Next</title>
@@ -113,7 +205,7 @@ function Section_typeA({ data = [] }) {
             <button
               key={index}
               className={`${styles.flickity_page_dot}  ${index === curSlide ? styles.is_selected : ""}`}
-              onClick={() => SetCurSlide(index)}
+              onClick={() => setCurSlide(index)}
             ></button>
           ))}
         </div>
