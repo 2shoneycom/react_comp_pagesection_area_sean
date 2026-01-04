@@ -1,6 +1,16 @@
+/* (너비 <= 567) 1.2개 & 점메뉴 왼쪽으로 붙음 */
+
 .top_container {
   padding-block: 40px;
   margin-inline: 50px;
+}
+
+@media only screen and (min-width: 1340px) {
+  .top_container {
+    margin-left: auto;
+    margin-right: auto;
+    max-width: var(--contentWidth);
+  }
 }
 
 .ResearchArea_header_wrapper {
@@ -37,15 +47,52 @@
 }
 
 .flickity_slider .flickity_group {
-  --item-width: 50%;
-  --item-offset: ((20px / 2 * 2 - 20px / 2) / 2);
-  width: calc(var(--item-width) - var(--item-offset));
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
   gap: 10px;
   margin-right: 10px;
-  /* transform: translateX(0%); */
+  width: 82.5%;
+}
+
+/* (1340 <= 너비) 4개 */
+@media only screen and (min-width: 1340px) {
+  .flickity_slider .flickity_group {
+    --item-width: 25%;
+    --item-offset: ((20px / 2 * 4 - 20px / 2) / 4);
+    margin-right: 20px/2;
+    width: calc(var(--item-width) - var(--item-offset));
+  }
+}
+
+/* (1024 <= 너비 <= 1339) 3개 */
+@media only screen and (min-width: 1024px) and (max-width: 1339px) {
+  .flickity_slider .flickity_group {
+    --item-width: 33.33333333%;
+    --item-offset: ((20px / 2 * 3 - 20px / 2) / 3);
+    margin-right: 20px/2;
+    width: calc(var(--item-width) - var(--item-offset));
+  }
+}
+
+/* (768 <= 너비 <= 1023) 2개 */
+@media only screen and (min-width: 768px) and (max-width: 1023px) {
+  .flickity_slider .flickity_group {
+    --item-width: 50%;
+    --item-offset: ((20px / 2 * 2 - 20px / 2) / 2);
+    margin-right: 20px/2;
+    width: calc(var(--item-width) - var(--item-offset));
+  }
+}
+
+/* (568 <= 너비 <= 767) 2개 & 점메뉴 왼쪽으로 붙음 */
+@media only screen and (min-width: 568px) and (max-width: 767px) {
+  .flickity_slider .flickity_group {
+    --item-width: 50%;
+    --item-offset: ((20px / 2 * 2 - 20px / 2) / 2);
+    margin-right: 20px/2;
+    width: calc(var(--item-width) - var(--item-offset));
+  }
 }
 
 .flickity_slider .ResearchAreaCard {
@@ -167,6 +214,12 @@
   flex-wrap: wrap;
   justify-content: center;
   text-align: center;
+}
+
+@media only screen and (max-width: 767px) {
+  .flickity_page_dots {
+    justify-content: flex-start;
+  }
 }
 
 .flickity_page_dots .flickity_page_dot {

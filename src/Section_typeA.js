@@ -3,10 +3,6 @@ import styles from "./css/section_typeA.module.css";
 import { useState, useEffect, useRef } from "react";
 
 function Section_typeA({ data = [] }) {
-  // TO DO
-  // 1. 지금은 버튼만으로 슬라이드 이동이 가능한데, 드래그로도 가능하게 만들어야 함.
-  // 2. 반응형 웹 디자인
-
   // 받은 data 전처리 (2개씩 그룹핑)
   const groups = [];  // groups = [ [data1, data2], [data3, data4], ... ]
   for (let i = 0; i < data.length; i += 2) {
@@ -14,7 +10,7 @@ function Section_typeA({ data = [] }) {
   }
 
   // ---------------------------------------------------------
-  // 1. 화면 크기에 따라 보여지는 개수 계산 로직 
+  // 1. 화면 크기에 따라 슬라이드 개수 계산 로직 
   // ---------------------------------------------------------
   const [itemsPerSlide, setItemsPerSlide] = useState(2);
   const slideCount = Math.ceil(groups.length / itemsPerSlide);
@@ -23,10 +19,21 @@ function Section_typeA({ data = [] }) {
     const handleResize = () => {
       const width = window.innerWidth;  // 현재 브라우저의 너비
 
-      if (width < 768) {
-        setItemsPerSlide(1);
-      } else {
+      if (width >= 1340) {
+        setItemsPerSlide(4);
+        setTransOffset(100);
+      }
+      else if (width >= 1024) {
+        setItemsPerSlide(3);
+        setTransOffset(100);
+      }
+      else if (width >= 568) {
         setItemsPerSlide(2);
+        setTransOffset(100);
+      }
+      else {
+        setItemsPerSlide(1);
+        setTransOffset(82.5);
       }
     };
 
@@ -42,11 +49,6 @@ function Section_typeA({ data = [] }) {
   // 2. 슬라이드 이동 효과 구현
   // ---------------------------------------------------------
   const [curSlide, setCurSlide] = useState(0);
-  const [transAmount, setTransAmount] = useState(0);
-
-  useEffect(() => {
-    setTransAmount(curSlide * (-101.31));
-  }, [curSlide]);
 
   // ---------------------------------------------------------
   // 3. 드래그 효과 구현
@@ -54,8 +56,10 @@ function Section_typeA({ data = [] }) {
   const [isDragging, setIsDragging] = useState(false); // 드래그 중인가?
   const [startX, setStartX] = useState(0);             // 드래그 시작 X 좌표
   const [dragOffset, setDragOffset] = useState(0);     // 드래그로 움직인 거리 (px)
+  const [transOffset, setTransOffset] = useState(100);
   const dragMovedRef = useRef(false);
-  const transformValue = `translateX(calc(${curSlide * -101.31}% + ${dragOffset}px))`;
+  const GAP = 10; // CSS에서 설정한 margin-right 값
+  const transformValue = `translateX(calc(${curSlide} * (-${transOffset}% - ${GAP}px) + ${dragOffset}px))`;
 
   const onDragStart = (e) => {
     setIsDragging(true);
@@ -128,6 +132,7 @@ function Section_typeA({ data = [] }) {
 
       {/* 2. Carousel Slider Area */}
       <div className={styles.carousel_slider}>
+        {/* 2-1. Carousel */}
         <div
           className={styles.flickity_viewport}
           // 마우스/터치 이벤트 연결
@@ -144,8 +149,8 @@ function Section_typeA({ data = [] }) {
             className={styles.flickity_slider}
             style={{
               transform: transformValue,
-              transition: isDragging ? "none" : "transform 0.5s ease-out",
-              cursor: isDragging ? "grabbing" : "grab"
+              transition: isDragging ? "none" : "transform 0.5s ease-out", // 드래그 중일 때는 애니메이션(transition)을 꺼야 딜레이 없이 손가락을 따라옴
+              cursor: isDragging ? "grabbing" : "grab" // 커서 모양 변경
             }}
           >
 
@@ -180,6 +185,7 @@ function Section_typeA({ data = [] }) {
             ))}
           </div>
         </div>
+        {/* 2-2. Prev Button */}
         <button
           className={`${styles.flickity_button} ${styles.flickity_prev_next_button} ${styles.previous}`}
           onClick={() => setCurSlide(curSlide - 1)}
@@ -190,6 +196,7 @@ function Section_typeA({ data = [] }) {
             <path d="M0.6,0.3c-0.4,0.4-0.4,1,0,1.4L5.8,7l-5.2,5.2c-0.4,0.4-0.4,1,0,1.4c0.4,0.4,1,0.4,1.4,0l6.5-6.5L8.7,7L8.5,6.8 L2,0.3C1.6-0.1,1-0.1,0.6,0.3z" transform="translate(100, 100) rotate(180)"></path>
           </svg>
         </button>
+        {/* 2-3. Next Button */}
         <button
           className={`${styles.flickity_button} ${styles.flickity_prev_next_button} ${styles.next}`}
           onClick={() => setCurSlide(curSlide + 1)}
@@ -200,6 +207,7 @@ function Section_typeA({ data = [] }) {
             <path d="M0.6,0.3c-0.4,0.4-0.4,1,0,1.4L5.8,7l-5.2,5.2c-0.4,0.4-0.4,1,0,1.4c0.4,0.4,1,0.4,1.4,0l6.5-6.5L8.7,7L8.5,6.8 L2,0.3C1.6-0.1,1-0.1,0.6,0.3z" transform="translate(100, 100) rotate(180)"></path>
           </svg>
         </button>
+        {/* 2-4. Page Dot Buttons */}
         <div className={styles.flickity_page_dots}>
           {Array.from({ length: slideCount }).map((_, index) => (
             <button
