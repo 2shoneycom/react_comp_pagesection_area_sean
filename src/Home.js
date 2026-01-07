@@ -1,5 +1,5 @@
-import styles from "./css/home.module.css";
-import AreaSection from "./Section_typeA";
+import styles from "./home.module.css";
+import AreaSection from "./custom_modules/Section_typeA";
 
 const researchAreaDataSample = [
   {
